@@ -1,0 +1,34 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Reference for creating a VPC, creating a IGW, and then attaching that gateway to that VPC
+
+Parameters: 
+  VpcCIDR:
+    Description: Sets the CIDR for the VPC
+    Type: String
+    Default: 10.10.0.0/16
+
+Resources:
+  projectOneVPC:
+    Description: The main VPC, CIDR is being assigned via the parameter
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: !Ref VpcCIDR
+      EnableDnsSupport: true
+      Tags:
+        - Key: keyname
+          Value: value
+  igwProjectOneVPC:
+    Description: The IGW that will be attached
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: keyname
+          Value: value
+  AttachGateway:
+    Description: The actual attaching of the gateway to the VPC, referencing the names of the resources to match them up
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId:
+        Ref: projectOneVPC
+      InternetGatewayId:
+        Ref: igwProjectOneVPC
