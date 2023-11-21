@@ -1,0 +1,82 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Reference for creating an EC2 instance and attaching a SG to it that only permits certain kinds of traffic.
+             This particular instance isn't realistic since it resides in a private subnet, but the pieces are there.
+
+Resources:
+  projectTwoVPC:
+    Description: The VPC that will hold the instance
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.20.0.0/16
+      EnableDnsSupport: true
+      Tags:
+        - Key: keyname
+          Value: value
+  
+  projectTwoPrivateSubnet:
+    Description: Private subnet within the VPC. This is where the instance will be deployed
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId:
+        Ref: projectTwoVPC
+      CidrBlock: 10.20.10.0/24
+      MapPublicIpOnLaunch: false
+      AvailabilityZone: us-east-2a
+      Tags:
+        - Key: keyname
+          Value: value
+  
+  projectTwoIGW:
+    Description: Gateway for VPC
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: keyname
+          Value: value
+  
+  AttachGateway:
+    Description: Attaching the gateway to the VPC
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId:
+        Ref: projectTwoVPC
+      InternetGatewayId:
+        Ref: projectTwoIGW
+  
+  projectTwoSecurityGroup:
+    Description: A security group that only allows inbound/outbound TCP traffic on port 22
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: sshAccess
+      GroupDescription: Allows SSH traffic
+      VpcId: 
+        Ref: projectTwoVPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+      SecurityGroupEgress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+      Tags:
+        - Key: key
+          Value: value
+
+  projectTwoEC2Instance:
+    Description: A small EC2 instance running an Amazon Linux AMI. It is deployed to the private subnet and has the security group attached
+    Type: AWS::EC2::Instance
+    Properties:
+      DisableApiTermination: false
+      ImageId: ami-06d4b7182ac3480fa
+      InstanceType: t3.micro
+      Monitoring: true
+      SecurityGroupIds:
+        - Ref: projectTwoSecurityGroup
+      SubnetId: 
+        Ref: projectTwoPrivateSubnet
+      Tags:
+        - Key: key
+          Value: value
