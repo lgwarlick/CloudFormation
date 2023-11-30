@@ -1,0 +1,80 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Creating a VPC containing a public subnet and a private subnet with a NAT gateway attached to it. 
+Metadata: 
+
+Parameters: 
+
+Mappings: 
+
+Conditions: 
+
+Resources:
+  projectThreeVPC:
+    Description: The VPC that will hold the public and private subnets
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.30.0.0/16
+      EnableDnsSupport: true
+      Tags:
+        - Key: keyname
+          Value: value
+  
+  projectThreePrivateSubnet:
+    Description: The private subnet that the NAT gateway will be attached to 
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId:
+        Ref: projectThreeVPC
+      CidrBlock: 10.30.0.10/24
+      AvailabilityZone: us-east-2a
+      Tags:
+        - Key: keyname
+          Value: value
+  
+  projectThreePublicSubnet:
+    Description: The public subnet
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId:
+        Ref: projectThreeVPC
+      CidrBlock: 10.30.0.20/24
+      AvailabilityZone: us-east-2a
+      Tags:
+        - Key: keyname
+          Value: value
+  
+  projectThreeNATGateway:
+    Description: NAT Gateway that will allow private subnet access to internet
+    Type: AWS::EC2::NatGateway
+    Properties:
+      SubnetId: projectThreePrivateSubnet
+      Tags: 
+        - Key: keyname
+          Value: value
+
+  attachNATGateway:
+    Description: Attaching the NAT gateway to the pirvate subnet
+
+  RouteNATGateway:
+    Description: Routing for the NAT gateway
+    Type: AWS::EC2::Route
+
+  projectTwoIGW:
+    Description: Gateway for VPC
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: keyname
+          Value: value
+
+  attachVPCGateway:
+    Description: Attaching the gateway to the VPC
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId:
+        Ref: projectThreeVPC
+      InternetGatewayId:
+        Ref: projectThreeVPC
+
+
+Outputs:
