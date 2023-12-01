@@ -1,12 +1,12 @@
 AWSTemplateFormatVersion: 2010-09-09
 Description: Creating a VPC containing a public subnet and a private subnet with a NAT gateway attached to it. 
-Metadata: 
+# Metadata: 
 
-Parameters: 
+# Parameters: 
 
-Mappings: 
+# Mappings: 
 
-Conditions: 
+# Conditions: 
 
 Resources:
   projectThreeVPC:
@@ -15,9 +15,19 @@ Resources:
     Properties:
       CidrBlock: 10.30.0.0/16
       EnableDnsSupport: true
-      Tags:
-        - Key: keyname
-          Value: value
+
+  projectThreeIGW:
+    Description: Gateway for VPC to have connection to the internet
+    Type: AWS::EC2::InternetGateway
+
+  attachVPCGateway:
+    Description: Attaching the internet gateway to the VPC
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId:
+        Ref: projectThreeVPC
+      InternetGatewayId:
+        Ref: projectThreeIGW
   
   projectThreePrivateSubnet:
     Description: The private subnet that the NAT gateway will be attached to 
@@ -25,11 +35,8 @@ Resources:
     Properties:
       VpcId:
         Ref: projectThreeVPC
-      CidrBlock: 10.30.0.10/24
+      CidrBlock: 10.30.10.0/24
       AvailabilityZone: us-east-2a
-      Tags:
-        - Key: keyname
-          Value: value
   
   projectThreePublicSubnet:
     Description: The public subnet
@@ -37,44 +44,98 @@ Resources:
     Properties:
       VpcId:
         Ref: projectThreeVPC
-      CidrBlock: 10.30.0.20/24
+      CidrBlock: 10.30.20.0/24
       AvailabilityZone: us-east-2a
-      Tags:
-        - Key: keyname
-          Value: value
   
+  projectThreeNATGatewayEIP:
+    Description: Elastic IP address for the NAT gateway
+    Type: AWS::EC2::EIP
+    Properties:
+      Domain: vpc
+
   projectThreeNATGateway:
     Description: NAT Gateway that will allow private subnet access to internet
     Type: AWS::EC2::NatGateway
-    Properties:
-      SubnetId: projectThreePrivateSubnet
-      Tags: 
-        - Key: keyname
-          Value: value
+    Properties: 
+      AllocationId: !GetAtt projectThreeNATGatewayEIP.AllocationId
+      SubnetId: !Ref projectThreePublicSubnet
 
-  attachNATGateway:
-    Description: Attaching the NAT gateway to the pirvate subnet
+  ##
+  # Routes
+  ##
 
-  RouteNATGateway:
-    Description: Routing for the NAT gateway
+  projectThreeRouteToIGW:
+    Description: Route to IGW for the public subnet
     Type: AWS::EC2::Route
-
-  projectTwoIGW:
-    Description: Gateway for VPC
-    Type: AWS::EC2::InternetGateway
     Properties:
-      Tags:
-        - Key: keyname
-          Value: value
+      DestinationCidrBlock: '0.0.0.0/0'
+      GatewayId: !Ref projectThreeIGW
+      RouteTableId: !Ref projectThreePublicRouteTable
 
-  attachVPCGateway:
-    Description: Attaching the gateway to the VPC
-    Type: AWS::EC2::VPCGatewayAttachment
+  projectThreeRouteNATGateway:
+    Description: Route to the NAT gateway for the private subnet
+    Type: AWS::EC2::Route
     Properties:
-      VpcId:
-        Ref: projectThreeVPC
-      InternetGatewayId:
-        Ref: projectThreeVPC
+      DestinationCidrBlock: '0.0.0.0/0'
+      NatGatewayId: !Ref projectThreeNATGateway
+      RouteTableId: !Ref projectThreePrivateRouteTable
+
+  ##
+  # Route Tables
+  ##
+
+  projectThreePublicRouteTable:
+    Description: Route table for the public subnet
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref projectThreeVPC
+
+  projectThreePrivateRouteTable:
+    Description: Route table for the pirvate subnet
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref projectThreeVPC
+  
+  ##
+  # Associating the route tables with their subnets
+  ##
+
+  projectThreeRouteSubnetPublic:
+    Description: Associating the public route table with the public subnet
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref projectThreePublicRouteTable
+      SubnetId: !Ref projectThreePublicSubnet
+
+  projectThreeRouteSubnetPrivate:
+    Description: Associating the private route table with the private subnet
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref projectThreePrivateRouteTable
+      SubnetId: !Ref projectThreePrivateSubnet
 
 
-Outputs:
+  ##
+  # The actual EC2 Instance
+  ##
+
+  projectThreeEC2Instance:
+    Description: A small EC2 instance running an Amazon Linux AMI. It is deployed to the private subnet and has the security group attached
+    Type: AWS::EC2::Instance
+    Properties:
+      DisableApiTermination: false
+      ImageId: ami-06d4b7182ac3480fa
+      InstanceType: t3.micro
+      Monitoring: true
+      # SecurityGroupIds:
+      #   - Ref: projectTwoSecurityGroup
+      SubnetId: 
+        Ref: projectThreePrivateSubnet
+
+  projectThreeEC2InstanceConnect:
+    Description: To allow connecting to the EC2 in the private instance to test if it has connectivity to internet via NAT
+    Type: AWS::EC2::InstanceConnectEndpoint
+    Properties:
+         SubnetId: !Ref projectThreePrivateSubnet
+         
+# Outputs:
