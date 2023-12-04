@@ -1,5 +1,5 @@
 # CloudFormation
-Collection of AWS CloudFormation templates
+Collection of AWS CloudFormation templates to serve as practice and reference for various designs
 
 ### Project 1
 Very simplistic
