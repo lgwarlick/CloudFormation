@@ -1,14 +1,8 @@
 AWSTemplateFormatVersion: 2010-09-09
 Description: Creating a VPC containing a public subnet and a private subnet with a NAT gateway attached to it. 
-# Metadata: 
-
-# Parameters: 
-
-# Mappings: 
-
-# Conditions: 
 
 Resources:
+
   projectThreeVPC:
     Description: The VPC that will hold the public and private subnets
     Type: AWS::EC2::VPC
@@ -30,7 +24,7 @@ Resources:
         Ref: projectThreeIGW
   
   projectThreePrivateSubnet:
-    Description: The private subnet that the NAT gateway will be attached to 
+    Description: The private subnet 
     Type: AWS::EC2::Subnet
     Properties:
       VpcId:
@@ -137,5 +131,3 @@ Resources:
     Type: AWS::EC2::InstanceConnectEndpoint
     Properties:
          SubnetId: !Ref projectThreePrivateSubnet
-         
-# Outputs:
