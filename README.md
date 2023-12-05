@@ -3,10 +3,10 @@ Collection of AWS CloudFormation templates (YAML) to serve as practice and refer
 
 ## Lessons/Preferences Learned
 
-### YAML vs JSON
+#### YAML vs JSON
 I went with YAML for all of these templates one, because I think it's easier to ready and two, I was getting plenty of JSON template practice on the Azure side of things with ARM templates
 
-** Parameter References
+#### Parameter References
 I was initially confused at !Ref parameter versus Ref:, but I ultimately settled on using the latter though I don't have strong feelings one way or the other. Many of the early project templates will show !Ref before I settled on a consistent format
 
 #### Naming Conventions
@@ -16,7 +16,7 @@ I didn't find any hard and fast "best practice" for naming conventions as it rel
 Very simplistic, though I did use parameters here without fully understanding their impact. This sets up a VPC and an IGW then attaches the the IGW to the VPC. My thought process here was that this would likely be the foundational design for many projects and was a good education that resources can be descrete or actions.
 
 ### Project 2
-
+Building upon the work of the first template, this one creates a subnet, instance, and security group within the VPC. The design isn't particularly realistic as the instance is deployed to a private subnet without a public subnet or NAT gateway included. It was more an exercise in making sure I had the syntax down for deploying those new resources.
 
 ### Project 3:
 Started to learn that as I add more resources to templates I would need to change my naming conventions. The "projectWhatever" prefix was firstly redundant, and secondly unnecessary clutter. This one invovles a private subnet holding an EC2 instance and a public subnet with a NAT gateway. The goal was to practice creating a set-up that would allow outbound traffic from the private EC2 instance. I had to add EC2InstanceConnect to test this as that endpoint is necessary to have an instance connection to a EC2 instance that doesn't have a private IP address.
