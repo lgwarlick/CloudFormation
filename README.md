@@ -12,6 +12,8 @@ I was initially confused at !Ref parameter versus Ref:, but I ultimately settled
 #### Naming Conventions
 I didn't find any hard and fast "best practice" for naming conventions as it related to CloudFormation templates. I went with camelCase because I had used it for the longest. Originally, as reflected in the early templates, I went for projectNumberResourceName (e.g. projectTwoIGW), but as the templates got more lengthy and complex that became messy. It also didn't make much sense considering the project number was already implied by the template name. I did, however, keep a version of this for parameters meaning that everything definied in that second of the template would be, for example, parameterEC2Instance. When it came to making edits I personally found this to make it easier to track down where in the template I needed to be.
 
+
+
 ### Project 1
 Very simplistic, though I did use parameters here without fully understanding their impact. This sets up a VPC and an IGW then attaches the the IGW to the VPC. My thought process here was that this would likely be the foundational design for many projects and was a good education that resources can be descrete or actions.
 
