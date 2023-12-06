@@ -1,0 +1,186 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Making better use of parameters
+
+
+Parameters:
+
+  # parameterInstanceType:
+  #   Description: Allowed EC2 instance sizes
+  #   Type: String
+  #   Default: t2.nano
+  #   AllowedValues:
+  #        - t2.micro
+  #        - t2.small
+
+  parameterCidrBlockVPC:
+    Description: CIDR block for the VPC
+    Type: String
+    Default: 10.10.0.0/16
+
+  parameterCidrBlockPublicSubnet1:
+    Description: CIDR block for first public subnet
+    Type: String
+    Default: 10.10.10.0/24
+
+  parameterCidrBlockPublicSubnet2:
+    Description: CIDR block for second public subnet
+    Type: String
+    Default: 10.10.20.0/24
+
+  parameterCidrBlockPrivateSubnet1:
+    Description: CIDR block for first private subnet
+    Type: String
+    Default: 10.10.30.0/24
+
+  parameterCidrBlockPrivateSubnet2:
+    Description: CIDR block for second private subnet
+    Type: String
+    Default: 10.10.40.0/24
+
+  parameterAZ1:
+    Description: Set the first availability zone
+    Type: String
+    Default: us-east-2a
+    AllowedValues:
+          - us-east-2a
+          - us-east-2b
+
+  parameterAZ2:
+    Description: Set the second availability zone
+    Type: String
+    Default: us-east-2b
+    AllowedValues:
+          - us-east-2a
+          - us-east-2b
+
+  
+
+#Mappings: 
+
+#Conditions: 
+
+Resources:
+
+  ##
+  ## VPC and IGW
+  ##
+
+  theVPC:
+    Description: VPC that will hold all the resources
+    Type: AWS::EC2::VPC
+    Properties:
+      # EnableDnsSupport: Yes
+      CidrBlock: 
+        Ref: parameterCidrBlockVPC
+
+  IGW:
+    Description: Internet gateway for the VPC
+    Type: AWS::EC2::InternetGateway
+
+  attachIGW:
+    Description: Attaching IGW to the VPC
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: 
+        Ref: theVPC
+      InternetGatewayId: 
+        Ref: IGW
+
+  ##
+  ## Publically available resources
+  ##
+
+  publicSubnet1: 
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId:
+        Ref: theVPC
+      CidrBlock:
+        Ref: parameterCidrBlockPublicSubnet1
+      MapPublicIpOnLaunch: true
+      AvailabilityZone:
+        Ref: parameterAZ1
+
+  publicSubnet2: 
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId:
+        Ref: theVPC
+      CidrBlock:
+        Ref: parameterCidrBlockPublicSubnet2
+      MapPublicIpOnLaunch: true
+      AvailabilityZone:
+        Ref: parameterAZ2
+
+  applicationLoadBalancer:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Type: application
+      IpAddressType: ipv4
+      Scheme: internet-facing
+      Subnets:
+        - Ref: publicSubnet1
+        - Ref: publicSubnet2
+
+  publicRouteTable:
+    Description: Route table for the public subnet
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId:
+        Ref: theVPC
+
+  routeToIGW:
+    Description: Route to IGW for the public subnet
+    Type: AWS::EC2::Route
+    Properties:
+      DestinationCidrBlock: '0.0.0.0/0'
+      GatewayId:
+        Ref: IGW
+      RouteTableId:
+        Ref: publicRouteTable
+
+  ## Private Subnet and its contents
+
+  privateSubnet1: 
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId:
+        Ref: theVPC
+      CidrBlock:
+        Ref: parameterCidrBlockPrivateSubnet1
+      MapPublicIpOnLaunch: false
+      AvailabilityZone:
+        Ref: parameterAZ1
+
+  privateSubnet2: 
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId:
+        Ref: theVPC
+      CidrBlock:
+        Ref: parameterCidrBlockPrivateSubnet2
+      MapPublicIpOnLaunch: false
+      AvailabilityZone:
+        Ref: parameterAZ2
+
+  # autoscalingGroup:
+  #   Type: AWS::AutoScaling::AutoScalingGroup
+  #   Properties:
+  #        MaxSize: 3
+  #        MinSize: 1
+
+
+  # Security Group
+         
+  
+#   Instance:
+#     Type: AWS::EC2::Instance
+#     Properties:
+#          SubnetId:
+#           Ref: paramaterCidrBlock
+#          ImageId: ami-06d4b7182ac3480fa  
+#          InstanceType: 
+#           Ref: parameterInstanceType
+
+
+# Outputs:
